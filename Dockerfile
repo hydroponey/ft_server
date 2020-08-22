@@ -1,8 +1,5 @@
 FROM debian:buster
 
-RUN apt-get update
-RUN apt-get upgrade
-
 # Generate certificate
 RUN apt-get install -y openssl && \
     openssl req -x509 -nodes -days 365 -subj "/C=CA/ST=QC/O=42 School/CN=asimoes" -addext "subjectAltName=DNS:localhost" -newkey rsa:2048 -keyout /etc/ssl/private/nginx-selfsigned.key -out /etc/ssl/certs/nginx-selfsigned.crt
