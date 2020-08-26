@@ -21,7 +21,7 @@ RUN service mysql start && \
     service mysql stop
 
 # Install PHP-FPM
-RUN apt-get install -y php php-common php-mysql php-fpm
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y php php-common php-mysql php-fpm
 
 # Install phpMyAdmin
 RUN apt-get install -y wget && \
