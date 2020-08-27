@@ -1,5 +1,6 @@
 FROM debian:buster
 
+ENV AUTOINDEX=on
 RUN apt-get update
 
 # Generate certificate
@@ -7,8 +8,8 @@ RUN apt-get install -y openssl && \
     openssl req -x509 -nodes -days 365 -subj "/C=CA/ST=QC/O=42 School/CN=asimoes" -addext "subjectAltName=DNS:localhost" -newkey rsa:2048 -keyout /etc/ssl/private/nginx-selfsigned.key -out /etc/ssl/certs/nginx-selfsigned.crt
 
 # Install Nginx
-RUN apt-get install -y nginx
-COPY ./srcs/default /etc/nginx/sites-available/default
+RUN apt-get install -y nginx gettext-base
+COPY ./srcs/server.template /tmp/server.template
 
 # Install MariaDB
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y mariadb-server
@@ -34,6 +35,11 @@ RUN apt-get install -y wget && \
 COPY ./srcs/wordpress/ /var/www/html/wordpress
 
 # Run services
-CMD service mysql start; service php7.3-fpm start; service nginx start; tail -f /dev/null
+CMD rm -rf /etc/nginx/sites-available/default && \
+    envsubst '$AUTOINDEX' < /tmp/server.template > /etc/nginx/sites-available/default && \
+    service nginx start &&\
+    service php7.3-fpm start; \
+    service mysql start; \
+    tail -f /dev/null
 
 EXPOSE 80 443
