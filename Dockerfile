@@ -8,7 +8,8 @@ RUN apt-get install -y openssl && \
     openssl req -x509 -nodes -days 365 -subj "/C=CA/ST=QC/O=42 School/CN=asimoes" -addext "subjectAltName=DNS:localhost" -newkey rsa:2048 -keyout /etc/ssl/private/nginx-selfsigned.key -out /etc/ssl/certs/nginx-selfsigned.crt
 
 # Install Nginx
-RUN apt-get install -y nginx gettext-base
+RUN apt-get install -y nginx gettext-base && \
+    rm -f /etc/nginx/sites-available/default
 COPY ./srcs/server.template /tmp/server.template
 
 # Install MariaDB
@@ -35,9 +36,8 @@ RUN apt-get install -y wget && \
 COPY ./srcs/wordpress/ /var/www/html/wordpress
 
 # Run services
-CMD rm -rf /etc/nginx/sites-available/default && \
-    envsubst '$AUTOINDEX' < /tmp/server.template > /etc/nginx/sites-available/default && \
-    service nginx start &&\
+CMD envsubst '$AUTOINDEX' < /tmp/server.template > /etc/nginx/sites-available/default && \
+    service nginx start; \
     service php7.3-fpm start; \
     service mysql start; \
     tail -f /dev/null
