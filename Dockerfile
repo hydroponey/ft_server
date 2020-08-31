@@ -1,19 +1,27 @@
 FROM debian:buster
 
 ENV AUTOINDEX=on
-RUN apt-get update
+
+# Install packages
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y \
+	openssl \
+	nginx \
+	gettext-base \
+	mariadb-server \
+	php \
+	php-common \
+	php-mysql \
+	php-fpm \
+	wget
 
 # Generate certificate
-RUN apt-get install -y openssl && \
-    openssl req -x509 -nodes -days 365 -subj "/C=CA/ST=QC/O=42 School/CN=asimoes" -addext "subjectAltName=DNS:localhost" -newkey rsa:2048 -keyout /etc/ssl/private/nginx-selfsigned.key -out /etc/ssl/certs/nginx-selfsigned.crt
+RUN openssl req -x509 -nodes -days 365 -subj "/C=CA/ST=QC/O=42 School/CN=asimoes" -addext "subjectAltName=DNS:localhost" -newkey rsa:2048 -keyout /etc/ssl/private/nginx-selfsigned.key -out /etc/ssl/certs/nginx-selfsigned.crt
 
-# Install Nginx
-RUN apt-get install -y nginx gettext-base && \
-    rm -f /etc/nginx/sites-available/default
+# Set nginx server configuration
+RUN rm -f /etc/nginx/sites-available/default
 COPY ./srcs/server.template /tmp/server.template
 
-# Install MariaDB
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y mariadb-server
+# Set MySQL root password and install Wordpress database
 COPY ./srcs/setup.sql /setup.sql
 COPY ./srcs/wordpress.sql /wordpress.sql
 RUN service mysql start && \
@@ -22,12 +30,8 @@ RUN service mysql start && \
     mysql -u root wordpress < /wordpress.sql && \
     service mysql stop
 
-# Install PHP-FPM
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y php php-common php-mysql php-fpm
-
 # Install phpMyAdmin
-RUN apt-get install -y wget && \
-    wget -q https://www.phpmyadmin.net/downloads/phpMyAdmin-latest-english.tar.gz && \
+RUN wget -q https://www.phpmyadmin.net/downloads/phpMyAdmin-latest-english.tar.gz && \
     tar -xf phpMyAdmin-latest-english.tar.gz -C /var/www/html && \
     mv /var/www/html/phpMyAdmin* /var/www/html/phpMyAdmin && \
     rm -f phpMyAdmin-latest-english.tar.gz
