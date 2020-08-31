@@ -1,9 +1,10 @@
 FROM debian:buster
 
 ENV AUTOINDEX=on
+ENV DEBIAN_FRONTEND=noninteractive
 
 # Install packages
-RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y \
 	openssl \
 	nginx \
 	gettext-base \
